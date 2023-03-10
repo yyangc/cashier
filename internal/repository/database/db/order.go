@@ -13,16 +13,16 @@ import (
 )
 
 type order struct {
-	ID            string             `gorm:"column:id"`
-	UserID        int64              `gorm:"column:user_id"`        // 用戶ID
-	OriginalPrice decimal.Decimal    `gorm:"column:original_price"` // 原始價格
-	FinalPrice    decimal.Decimal    `gorm:"column:final_price"`    // 最終價格 (扣除優惠活動)
-	UsedPoints    int32              `gorm:"column:used_points"`    // 使用平台點數
-	PromotionIDs  datatypes.JSON     `gorm:"column:promotion_ids"`  // 使用的優惠ID
-	Promotions    []*model.Promotion `gorm:"-"`
-	Items         []*orderItem       `gorm:"foreignKey:OrderID;references:ID"`
-	CreatedAt     time.Time          `gorm:"column:created_at"`
-	UpdatedAt     time.Time          `gorm:"column:updated_at"`
+	ID            string          `gorm:"column:id"`
+	UserID        int64           `gorm:"column:user_id"`        // 用戶ID
+	OriginalPrice decimal.Decimal `gorm:"column:original_price"` // 原始價格
+	FinalPrice    decimal.Decimal `gorm:"column:final_price"`    // 最終價格 (扣除優惠活動)
+	UsedPoints    int32           `gorm:"column:used_points"`    // 使用平台點數
+	PromotionIDs  datatypes.JSON  `gorm:"column:promotion_ids"`  // 使用的優惠ID
+	CreatedAt     time.Time       `gorm:"column:created_at"`
+	UpdatedAt     time.Time       `gorm:"column:updated_at"`
+
+	Items []*orderItem `gorm:"foreignKey:OrderID;references:ID"`
 }
 
 func (o order) TableName() string {

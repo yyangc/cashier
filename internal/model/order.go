@@ -13,10 +13,11 @@ type Order struct {
 	FinalPrice    decimal.Decimal // 最終價格 (扣除優惠活動)
 	UsedPoints    int32           // 使用平台點數
 	PromotionIDs  []int64         // 使用的優惠ID
-	Promotions    []*Promotion    // 使用的優惠
-	Items         []*OrderItem    // 購買的商品
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
+
+	Items      []*OrderItem // 關聯的商品 Product
+	Promotions []*Promotion // 使用的優惠 Promotion
 }
 
 // OrderItem 訂單詳情的紀錄
