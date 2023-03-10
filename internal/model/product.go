@@ -26,7 +26,7 @@ func (p ProductStatus) Str() string {
 }
 
 // Product 產品
-// 其實可以將庫存分來，目前先簡化
+// Todo 其實可以將庫存從商品分出來，目前先簡化
 type Product struct {
 	ID                string          // Globally Unique ID
 	Name              string          // 商品名稱
