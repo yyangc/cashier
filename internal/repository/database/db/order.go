@@ -58,7 +58,7 @@ func (db *database) CreateOrder(ctx context.Context, mOrder *model.Order) (err e
 type orderItem struct {
 	ID        int64           `gorm:"column:id"`
 	OrderID   string          `gorm:"column:order_id"`   // 關聯的 OrderID
-	ProductID string          `gorm:"column:product_id"` // Product 的 ID
+	ProductID int64           `gorm:"column:product_id"` // Product 的 ID
 	Name      string          `gorm:"column:name"`       // 商品名稱
 	UnitPrice decimal.Decimal `gorm:"column:unit_price"` // 平台幣/單價
 	Quantity  int32           `gorm:"column:quantity"`   // 數量

@@ -26,16 +26,15 @@ func (p ProductStatus) Str() string {
 }
 
 // Product 產品
-// Todo 其實可以將庫存從商品分出來，目前先簡化
 type Product struct {
-	ID                string          // Globally Unique ID
-	Name              string          // 商品名稱
-	Status            ProductStatus   // 商品上下架狀態
-	Price             decimal.Decimal // 價格(單位：平台幣)
-	Quantity          int32           // 總數量
-	InventoryQuantity int32           // 庫存數量
-	CreatedAt         time.Time       // 創建時間
-	UpdatedAt         time.Time       // 更新時間
+	ID        int64
+	Name      string          // 商品名稱
+	Status    ProductStatus   // 商品上下架狀態
+	Price     decimal.Decimal // 價格(單位：平台幣)
+	CreatedAt time.Time       // 創建時間
+	UpdatedAt time.Time       // 更新時間
+
+	Inventory *Inventory // 庫存
 }
 
 func (p *Product) IsAvailable() bool {
@@ -43,9 +42,4 @@ func (p *Product) IsAvailable() bool {
 		return true
 	}
 	return false
-}
-
-type QuantityOperation struct {
-	Operation NumericOperation
-	Quantity  int32
 }

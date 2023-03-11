@@ -14,7 +14,7 @@ import (
 )
 
 // CreateOrder 建立訂單，返回最終訂單金額
-func (s *service) CreateOrder(ctx context.Context, userID int64, points int32, shoppingCart map[string]int32) (orderID string, err error) {
+func (s *service) CreateOrder(ctx context.Context, userID int64, points int32, shoppingCart map[int64]int32) (orderID string, err error) {
 	order := &model.Order{
 		ID:         xid.New().String(),
 		UserID:     userID,
@@ -28,13 +28,14 @@ func (s *service) CreateOrder(ctx context.Context, userID int64, points int32, s
 		return "", err
 	}
 
-	var productIDs = make([]string, 0, len(products))
+	// 紀錄該訂單關聯的商品
+	var productIDs = make([]int64, 0, len(products))
 	for _, product := range products {
 		order.Items = append(order.Items, model.NewOrderItem(order.ID, product, shoppingCart[product.ID]))
 		productIDs = append(productIDs, product.ID)
 	}
 
-	// 計算優惠後的金額
+	// 返回符合條件的優惠 & 優惠後的訂單金額
 	order.FinalPrice, order.Promotions, err = s.CalculateDiscountPrice(ctx, order)
 	if err != nil {
 		return "", err
@@ -53,7 +54,7 @@ func (s *service) CreateOrder(ctx context.Context, userID int64, points int32, s
 
 		var updatesWallet = updates.Wallet{}
 
-		// 檢查平台幣餘額
+		// 檢查錢包的平台幣餘額是否足夠
 		if order.FinalPrice.GreaterThan(wallet.Token) {
 			return errors.Wrapf(errors.ErrInsufficientBalance,
 				"Insufficient token, order token %d is greater than wallet token %d", order.FinalPrice, wallet.Token,
@@ -78,7 +79,7 @@ func (s *service) CreateOrder(ctx context.Context, userID int64, points int32, s
 			}
 		}
 
-		// 扣錢 + 扣點數
+		// 更新用戶錢包 (扣錢 + 扣點數)
 		if err := txRepo.UpdateWallet(txCtx,
 			&query.WalletOptions{IDIn: []int64{wallet.ID}},
 			&updatesWallet,
@@ -86,35 +87,29 @@ func (s *service) CreateOrder(ctx context.Context, userID int64, points int32, s
 			return err
 		}
 
-		// 檢查商品狀態及庫存
-		products, err = txRepo.ListProducts(txCtx, &query.ProductOptions{
-			IDIn: productIDs,
-			Lock: true,
+		// 檢查商品庫存
+		inventories, err := txRepo.ListInventories(txCtx, &query.InventoryOptions{
+			ProductIDIn: productIDs,
+			Lock:        true,
 		})
 		if err != nil {
 			return err
 		}
 
-		for i := range products {
+		for i := range inventories {
 			// 商品庫存必須大於等於購買數量
-			if products[i].IsAvailable() {
+			if inventories[i].AvailableQuantity < shoppingCart[products[i].ID] {
 				return errors.Wrapf(errors.ErrInsufficientBalance,
-					"productID(%d) is unavailable for sale.", products[i].ID,
-				)
-			}
-			// 商品庫存必須大於等於購買數量
-			if products[i].InventoryQuantity < shoppingCart[products[i].ID] {
-				return errors.Wrapf(errors.ErrInsufficientBalance,
-					"productID(%d) is out of stock. %d < %d", products[i].InventoryQuantity, shoppingCart[products[i].ID],
+					"productID(%d) is out of stock. %d < %d", inventories[i].AvailableQuantity, shoppingCart[products[i].ID],
 				)
 			}
 		}
 
 		// 更新庫存
 		for i := range order.Items {
-			if err := txRepo.UpdateProduct(txCtx,
-				&query.ProductOptions{IDIn: []string{order.Items[i].ProductID}},
-				&updates.Product{InventoryQuantity: &model.QuantityOperation{
+			if err := txRepo.UpdateInventory(txCtx,
+				&query.InventoryOptions{ProductIDIn: []int64{order.Items[i].ProductID}},
+				&updates.Inventory{AvailableQuantity: &model.QuantityOperation{
 					Operation: model.NumericOperationSub,
 					Quantity:  order.Items[i].Quantity,
 				}},
@@ -138,11 +133,11 @@ func (s *service) CreateOrder(ctx context.Context, userID int64, points int32, s
 }
 
 // CalculateShoppingCart 清算購物車的商品，返回總金額 & 商品
-func (s *service) CalculateShoppingCart(ctx context.Context, purchaseList map[string]int32) (
+func (s *service) CalculateShoppingCart(ctx context.Context, purchaseList map[int64]int32) (
 	price decimal.Decimal, products []*model.Product, err error,
 ) {
 
-	var productIDs = make([]string, 0, len(purchaseList))
+	var productIDs = make([]int64, 0, len(purchaseList))
 	for id := range purchaseList {
 		productIDs = append(productIDs, id)
 	}
@@ -162,7 +157,7 @@ func (s *service) CalculateShoppingCart(ctx context.Context, purchaseList map[st
 		if product.Status != model.ProductStatusOn {
 			return decimal.Zero, nil, errors.Wrapf(errors.ErrResourceUnavailable, "product(%d) status is %s", product.ID, product.Status.Str())
 		}
-		if product.InventoryQuantity <= 0 {
+		if product.Inventory.AvailableQuantity <= 0 {
 			return decimal.Zero, nil, errors.Wrapf(errors.ErrResourceUnavailable, "product(%d) is sold out", product.ID)
 		}
 

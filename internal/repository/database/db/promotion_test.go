@@ -12,8 +12,6 @@ import (
 
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/suite"
-	"gorm.io/driver/mysql"
-	"gorm.io/gorm"
 )
 
 // ################################
@@ -34,25 +32,24 @@ func TestPromotion(t *testing.T) {
 	suite.Run(t, new(PromotionSuite))
 }
 
-func (p *PromotionSuite) SetupSuite() {
-	dsn := "default:root@tcp(127.0.0.1:3306)/default?charset=utf8mb4&parseTime=True&loc=Local"
-	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
-	p.Require().NoError(err)
+func (s *PromotionSuite) SetupSuite() {
+	readDB, writeDB, err := newTestDB()
+	s.Require().NoError(err)
 
-	p.ctx = context.Background()
-	p.repo = New(db, db)
+	s.ctx = context.Background()
+	s.repo = New(readDB, writeDB)
 }
 
-func (p *PromotionSuite) TestListPromotions() {
-	mps, err := p.repo.ListPromotions(p.ctx, &query.PromotionOptions{})
-	p.Require().NoError(err)
+func (s *PromotionSuite) TestListPromotions() {
+	mps, err := s.repo.ListPromotions(s.ctx, &query.PromotionOptions{})
+	s.Require().NoError(err)
 	for i := range mps {
 		log.Printf("%+v", mps[i])
 		log.Printf("ext: %+v", mps[i].Extension)
 	}
 }
 
-func (p *PromotionSuite) TestCreatePromotion() {
+func (s *PromotionSuite) TestCreatePromotion() {
 
 	mpMember := &model.Promotion{
 		Name:        "pppp",
@@ -77,8 +74,8 @@ func (p *PromotionSuite) TestCreatePromotion() {
 		EndAt:     time.Now().Add(15 * 24 * time.Hour),
 	}
 
-	err := p.repo.CreatePromotion(p.ctx, mpMember)
-	p.Require().NoError(err)
+	err := s.repo.CreatePromotion(s.ctx, mpMember)
+	s.Require().NoError(err)
 
 	mpPoint := &model.Promotion{
 		Name:        "pointt",
@@ -92,6 +89,6 @@ func (p *PromotionSuite) TestCreatePromotion() {
 		EndAt:     time.Now().Add(15 * 24 * time.Hour),
 	}
 
-	err = p.repo.CreatePromotion(p.ctx, mpPoint)
-	p.Require().NoError(err)
+	err = s.repo.CreatePromotion(s.ctx, mpPoint)
+	s.Require().NoError(err)
 }

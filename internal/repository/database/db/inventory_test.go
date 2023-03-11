@@ -2,10 +2,11 @@ package db
 
 import (
 	"context"
-	"log"
 	"testing"
 
+	"cashier/internal/model"
 	"cashier/internal/model/query"
+	"cashier/internal/model/updates"
 	iDB "cashier/internal/repository/database"
 
 	"github.com/stretchr/testify/suite"
@@ -18,33 +19,37 @@ import (
 //
 // ################################
 
-type ProductSuite struct {
+type InventorySuite struct {
 	suite.Suite
 
 	ctx  context.Context
 	repo iDB.IDatabase
 }
 
-func TestProduct(t *testing.T) {
-	suite.Run(t, new(ProductSuite))
+func TestInventory(t *testing.T) {
+	suite.Run(t, new(InventorySuite))
 }
 
-func (s *ProductSuite) SetupSuite() {
+func (s *InventorySuite) SetupSuite() {
 	readDB, writeDB, err := newTestDB()
 	s.Require().NoError(err)
 
 	s.ctx = context.Background()
 	s.repo = New(readDB, writeDB)
+
 }
 
-func (s *ProductSuite) TestListProducts() {
-	products, err := s.repo.ListProducts(s.ctx, &query.ProductOptions{
-		IDIn:          []int64{},
-		WithInventory: true,
-	})
+func (s *InventorySuite) TestUpdateProducts() {
+	err := s.repo.UpdateInventory(s.ctx,
+		&query.InventoryOptions{
+			ProductIDIn: []int64{1},
+		},
+		&updates.Inventory{
+			AvailableQuantity: &model.QuantityOperation{
+				Operation: model.NumericOperationSub,
+				Quantity:  1,
+			},
+		},
+	)
 	s.Require().NoError(err)
-	for i := range products {
-		log.Printf("product: %+v", products[i])
-		log.Printf("Inventory: %+v", products[i].Inventory)
-	}
 }

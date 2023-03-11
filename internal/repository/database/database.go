@@ -18,6 +18,7 @@ type IDatabase interface {
 	IMemberDB
 	IOrderDB
 	IWalletDB
+	IInventoryDB
 }
 
 type IPromotionDB interface {
@@ -28,7 +29,6 @@ type IPromotionDB interface {
 
 type IProductDB interface {
 	ListProducts(ctx context.Context, options *query.ProductOptions) ([]*model.Product, error)
-	UpdateProduct(ctx context.Context, options *query.ProductOptions, updates *updates.Product) error
 }
 
 type IMemberDB interface {
@@ -46,4 +46,9 @@ type IWalletDB interface {
 	GetWallet(ctx context.Context, options *query.WalletOptions) (*model.Wallet, error)
 	// UpdateWallet 更新用戶的錢包
 	UpdateWallet(ctx context.Context, options *query.WalletOptions, updates *updates.Wallet) error
+}
+
+type IInventoryDB interface {
+	ListInventories(ctx context.Context, options *query.InventoryOptions) ([]*model.Inventory, error)
+	UpdateInventory(ctx context.Context, options *query.InventoryOptions, updates *updates.Inventory) error
 }

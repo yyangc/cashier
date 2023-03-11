@@ -24,7 +24,7 @@ type Order struct {
 type OrderItem struct {
 	ID        int64
 	OrderID   string          // 關聯的 OrderID
-	ProductID string          // Product 的 ID
+	ProductID int64           // Product 的 ID
 	Name      string          // 商品名稱
 	UnitPrice decimal.Decimal // 平台幣/單價
 	Quantity  int32           // 數量

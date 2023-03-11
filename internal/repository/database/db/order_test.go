@@ -1,17 +1,14 @@
 package db
 
 import (
-	"context"
-	"testing"
-
 	"cashier/internal/model"
 	iDB "cashier/internal/repository/database"
+	"context"
+	"testing"
 
 	"github.com/rs/xid"
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/suite"
-	"gorm.io/driver/mysql"
-	"gorm.io/gorm"
 )
 
 // ################################
@@ -32,16 +29,15 @@ func TestOrder(t *testing.T) {
 	suite.Run(t, new(OrderSuite))
 }
 
-func (o *OrderSuite) SetupSuite() {
-	dsn := "default:root@tcp(127.0.0.1:3306)/default?charset=utf8mb4&parseTime=True&loc=Local"
-	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
-	o.Require().NoError(err)
+func (s *OrderSuite) SetupSuite() {
+	readDB, writeDB, err := newTestDB()
+	s.Require().NoError(err)
 
-	o.ctx = context.Background()
-	o.repo = New(db, db)
+	s.ctx = context.Background()
+	s.repo = New(readDB, writeDB)
 }
 
-func (o *OrderSuite) TestCreateOrder() {
+func (s *OrderSuite) TestCreateOrder() {
 	orderID := xid.New().String()
 	_order := &model.Order{
 		ID:            xid.New().String(),
@@ -53,14 +49,14 @@ func (o *OrderSuite) TestCreateOrder() {
 		Items: []*model.OrderItem{
 			{
 				OrderID:   orderID,
-				ProductID: "ProductID_1",
+				ProductID: 1,
 				Name:      "name_1",
 				UnitPrice: decimal.NewFromInt32(50),
 				Quantity:  1,
 			},
 			{
 				OrderID:   orderID,
-				ProductID: "ProductID_2",
+				ProductID: 2,
 				Name:      "name_2",
 				UnitPrice: decimal.NewFromInt32(50),
 				Quantity:  1,
@@ -68,6 +64,6 @@ func (o *OrderSuite) TestCreateOrder() {
 		},
 	}
 
-	err := o.repo.CreateOrder(o.ctx, _order)
-	o.Require().NoError(err)
+	err := s.repo.CreateOrder(s.ctx, _order)
+	s.Require().NoError(err)
 }
