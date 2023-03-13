@@ -12,7 +12,7 @@ type IService interface {
 }
 
 type IOrderService interface {
-	CreateOrder(ctx context.Context, userID int64, points int32, shoppingCart map[string]int32) (orderID string, err error)
+	CreateOrder(ctx context.Context, userID int64, points int32, shoppingCart map[int64]int32) (orderID string, err error)
 }
 
 type IPromotionService interface {
