@@ -14,7 +14,7 @@ import (
 
 // Promotion 優惠活動
 type promotion struct {
-	ID          int64               `gorm:"column:id"`          // Globally Unique ID
+	ID          int64               `gorm:"column:id"`          // ID
 	Name        string              `gorm:"column:name"`        // 活動名稱
 	Description string              `gorm:"column:description"` // 詳情
 	Type        model.PromotionType `gorm:"column:type"`        // 活動類型

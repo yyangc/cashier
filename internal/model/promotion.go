@@ -29,7 +29,7 @@ const (
 
 // Promotion 優惠活動
 type Promotion struct {
-	ID          int64         // Globally Unique ID
+	ID          int64         // ID
 	Name        string        // 活動名稱
 	Description string        // 詳情
 	Type        PromotionType // 活動類型
@@ -93,11 +93,13 @@ func (p *PromotionExtMember) CalculatePrice(beforePrice decimal.Decimal, input *
 		return
 	}
 
+	// 檢查是否有該 VIP 類型
 	memberTypeRatio, exist := p.MemberRatio[input.Member.Type]
 	if !exist {
 		return
 	}
 
+	// 檢查是否有支持該 VIP 等級
 	memberRatio, exist := memberTypeRatio[input.Member.Level]
 	if !exist {
 		return
@@ -108,7 +110,7 @@ func (p *PromotionExtMember) CalculatePrice(beforePrice decimal.Decimal, input *
 
 // PromotionExtPoint 優惠類型(點數)的內容
 type PromotionExtPoint struct {
-	RatioToPoint decimal.Decimal // 比例，平台幣:平台點數
+	Ratio decimal.Decimal // 比例，平台點數:平台幣
 }
 
 // CalculatePrice 計算優惠類型(會員)後的價格
@@ -117,7 +119,7 @@ func (p *PromotionExtPoint) CalculatePrice(beforePrice decimal.Decimal, input *C
 		return false, beforePrice
 	}
 
-	return true, beforePrice.Sub(p.RatioToPoint.Mul(decimal.NewFromInt32(input.UsedPoints)))
+	return true, beforePrice.Sub(p.Ratio.Mul(decimal.NewFromInt32(input.UsedPoints)))
 }
 
 // PromotionExtExtraDiscount 優惠類型(額外優惠)的內容

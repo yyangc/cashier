@@ -82,7 +82,7 @@ func (s *PromotionSuite) TestCreatePromotion() {
 		Description: "pointtddddddd",
 		Type:        model.PromotionTypePoint,
 		Extension: &model.PromotionExtPoint{
-			RatioToPoint: decimal.NewFromFloat(1.1),
+			Ratio: decimal.NewFromFloat(1.1),
 		},
 		IsDefault: true,
 		StartAt:   time.Now().Add(-5 * 24 * time.Hour),
