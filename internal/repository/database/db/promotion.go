@@ -6,6 +6,7 @@ import (
 
 	"cashier/internal/model"
 	"cashier/internal/model/query"
+	"cashier/internal/pkg/errors"
 
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
@@ -115,7 +116,7 @@ func (db *database) CreatePromotion(ctx context.Context, mPromotion *model.Promo
 	}
 
 	if err := db.WriteDB(ctx).Create(_promotion).Error; err != nil {
-		return duplicateOrInternalError(err)
+		return errors.Wrapf(duplicateOrInternalError(err), "%+v", err)
 	}
 
 	return nil
@@ -124,7 +125,7 @@ func (db *database) CreatePromotion(ctx context.Context, mPromotion *model.Promo
 func (db *database) ListPromotions(ctx context.Context, options *query.PromotionOptions) ([]*model.Promotion, error) {
 	var _promotions = make([]*promotion, 0)
 	if err := buildPromotionWhereCondition(db.ReadDB(ctx), options).Find(&_promotions).Error; err != nil {
-		return nil, err
+		return nil, errors.Wrapf(errors.ErrInternalServerError, "%+v", err)
 	}
 
 	mPromotions := make([]*model.Promotion, 0, len(_promotions))

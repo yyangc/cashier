@@ -1,13 +1,14 @@
 package db
 
 import (
+	"context"
+	"fmt"
+	"time"
+
 	"cashier/internal/model"
 	"cashier/internal/model/query"
 	"cashier/internal/model/updates"
 	"cashier/internal/pkg/errors"
-	"context"
-	"fmt"
-	"time"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -74,7 +75,7 @@ func (db *database) ListInventories(ctx context.Context, options *query.Inventor
 	var _inventories = make([]*inventory, 0)
 
 	if err := buildInventoryWhereCondition(db.ReadDB(ctx), options).Find(&_inventories).Error; err != nil {
-		return nil, duplicateOrInternalError(err)
+		return nil, errors.Wrapf(duplicateOrInternalError(err), "%+v", err)
 	}
 
 	var mis = make([]*model.Inventory, 0, len(_inventories))
@@ -105,7 +106,7 @@ func (db *database) UpdateInventory(ctx context.Context, options *query.Inventor
 	if err := buildInventoryWhereCondition(db.WriteDB(ctx), options).
 		Table(inventory{}.TableName()).
 		Updates(_updates).Error; err != nil {
-		return errors.WithStack(err)
+		return errors.Wrapf(errors.ErrInternalServerError, "%+v", err)
 	}
 
 	return nil

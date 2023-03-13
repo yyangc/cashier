@@ -49,7 +49,7 @@ func (db *database) CreateOrder(ctx context.Context, mOrder *model.Order) (err e
 	}
 
 	if err := db.WriteDB(ctx).Create(_order).Error; err != nil {
-		return duplicateOrInternalError(err)
+		return errors.Wrapf(duplicateOrInternalError(err), "%+v", err)
 	}
 
 	return nil

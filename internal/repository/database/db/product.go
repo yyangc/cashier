@@ -6,6 +6,7 @@ import (
 
 	"cashier/internal/model"
 	"cashier/internal/model/query"
+	"cashier/internal/pkg/errors"
 
 	"github.com/shopspring/decimal"
 	"gorm.io/gorm"
@@ -85,7 +86,7 @@ func (db *database) ListProducts(ctx context.Context, options *query.ProductOpti
 	var products = make([]*product, 0)
 
 	if err := buildProductWhereCondition(db.ReadDB(ctx), options).Find(&products).Error; err != nil {
-		return nil, notFoundOrInternalError(err)
+		return nil, errors.Wrapf(notFoundOrInternalError(err), "%+v", err)
 	}
 
 	var mProducts = make([]*model.Product, 0, len(products))
