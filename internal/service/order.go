@@ -36,7 +36,7 @@ func (s *service) CreateOrder(ctx context.Context, userID int64, points int32, s
 	}
 
 	// 返回符合條件的優惠 & 優惠後的訂單金額
-	order.FinalPrice, order.Promotions, err = s.CalculateDiscountPrice(ctx, order)
+	order.FinalPrice, order.PromotionIDs, err = s.CalculateDiscountPrice(ctx, order)
 	if err != nil {
 		return "", err
 	}
@@ -168,8 +168,8 @@ func (s *service) CalculateShoppingCart(ctx context.Context, purchaseList map[in
 	return originalPrice, products, nil
 }
 
-// CalculateDiscountPrice 計算訂單折扣後金額
-func (s *service) CalculateDiscountPrice(ctx context.Context, order *model.Order) (afterPrice decimal.Decimal, promotions []*model.Promotion, err error) {
+// CalculateDiscountPrice 返回訂單折扣後金額 & 該訂單使用的優惠ID
+func (s *service) CalculateDiscountPrice(ctx context.Context, order *model.Order) (afterPrice decimal.Decimal, promotionIDs []int64, err error) {
 	// 取得用戶的會員等級
 	member, err := s.db.GetMember(ctx, &query.MemberOptions{IDIn: []int64{order.UserID}})
 	if err != nil {
@@ -183,7 +183,7 @@ func (s *service) CalculateDiscountPrice(ctx context.Context, order *model.Order
 	}
 
 	// 依優惠活動計算訂單金額 & 紀錄使用的優惠
-	promotions = make([]*model.Promotion, 0)
+	promotionIDs = make([]int64, 0)
 	afterPrice = order.OriginalPrice
 	calPriceInput := &model.CalculatePriceInput{
 		Member:     member,
@@ -196,10 +196,10 @@ func (s *service) CalculateDiscountPrice(ctx context.Context, order *model.Order
 			usedPromotion, afterPrice = promotion.Extension.CalculatePrice(afterPrice, calPriceInput)
 			if usedPromotion {
 				// 紀錄這個訂單有用到的優惠
-				promotions = append(promotions, promotion)
+				promotionIDs = append(promotionIDs, promotion.ID)
 			}
 		}
 	}
 
-	return afterPrice, promotions, nil
+	return afterPrice, promotionIDs, nil
 }

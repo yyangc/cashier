@@ -15,6 +15,7 @@ func (s *service) ListPromotions(ctx context.Context, options query.PromotionOpt
 	return promotions, nil
 }
 
+// GetCurrPromotionsMap 取得目前進行的活動
 func (s *service) GetCurrPromotionsMap(ctx context.Context) (map[model.PromotionType]*model.Promotion, error) {
 	now := time.Now().UTC()
 	promotions, err := s.db.ListPromotions(ctx, &query.PromotionOptions{
